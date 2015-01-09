@@ -1,8 +1,12 @@
 // Það sem þarf að nota
 var LocalStrategy = require('passport-local').Strategy;
+var FacebookStrategy = require('passport-facebook').Strategy;
 
 // Ná í User model
 var User = require('../app/models/user');
+
+// Ná í social stillingar
+var configAuth = require('./auth');
 
 // Leyfa appinu að nota function
 module.exports = function(passport) {
@@ -98,6 +102,55 @@ module.exports = function(passport) {
 
 			// Allt gékk upp
 			return done(null, user);
+		});
+	}));
+
+	// Facebook signup
+	// ===================================================
+
+	passport.use(new FacebookStrategy({
+		// Ná í app id og secret
+		clientID: configAuth.facebookAuth.clientID,
+		clientSecret: configAuth.facebookAuth.clientSecret,
+		callbackURL: configAuth.facebookAuth.callbackURL
+	},
+	// Facebook sendir til baka token og profile
+	function(token, refreshToken, profile, done) {
+		// Async
+		process.nextTick(function() {
+			// Finna user í DB útfrá facebook id
+			User.findOne({ 'facebook.id': profile.id }, function(err, user) {
+				// Ef ekki tókst að tengjast db
+				if (err) {
+					return done(err);
+				}
+
+				// Ef user fannst, login
+				if (user) {
+					// Returna user
+					return done(null, user);
+				} else {
+					// Ef user með fb id fannst ekki, búa hann til
+					var newUser = new User();
+
+					// Vista fb info
+					newUser.facebook.id = profile.id;
+					newUser.facebook.token = token;
+					newUser.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
+					// FB getur skilað nokkrum email, tökum fyrsta
+					newUser.facebook.email = profile.emails[0].value;
+
+					// Vista user
+					newUser.save(function(err) {
+						if (err) {
+							throw err;
+						}
+
+						// Returna nýja user
+						return done(null, newUser);
+					});
+				}
+			});
 		});
 	}));
 
