@@ -1,0 +1,36 @@
+{
+  "name": "node_auth",
+  "version": "1.0.0",
+  "description": "Node Authentication",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/hilmarp/node_auth.git"
+  },
+  "author": "Hilmar",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/hilmarp/node_auth/issues"
+  },
+  "homepage": "https://github.com/hilmarp/node_auth",
+  "dependencies": {
+    "bcrypt-nodejs": "0.0.3",
+    "body-parser": "^1.10.1",
+    "connect-flash": "^0.1.1",
+    "cookie-parser": "^1.3.3",
+    "ejs": "^2.0.8",
+    "express": "^4.10.7",
+    "express-session": "^1.10.0",
+    "method-override": "^2.3.1",
+    "mongoose": "^3.8.21",
+    "morgan": "^1.5.1",
+    "passport": "^0.2.1",
+    "passport-facebook": "^1.0.3",
+    "passport-google-oauth": "^0.1.5",
+    "passport-local": "^1.0.0",
+    "passport-twitter": "^1.0.2"
+  }
+}

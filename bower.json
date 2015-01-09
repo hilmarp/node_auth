@@ -1,0 +1,16 @@
+{
+  "name": "node_auth",
+  "version": "1.0.0",
+  "homepage": "https://github.com/hilmarp/node_auth",
+  "authors": [
+    "Hilmar <hilmar@hilmarp.com>"
+  ],
+  "description": "Node Authentication",
+  "main": "server.js",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "bootstrap": "~3.3.1",
+    "font-awesome": "~4.2.0"
+  }
+}
