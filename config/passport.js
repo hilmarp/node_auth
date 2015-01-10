@@ -1,6 +1,7 @@
 // Það sem þarf að nota
 var LocalStrategy = require('passport-local').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
+var TwitterStrategy = require('passport-twitter').Strategy;
 
 // Ná í User model
 var User = require('../app/models/user');
@@ -147,6 +148,51 @@ module.exports = function(passport) {
 						}
 
 						// Returna nýja user
+						return done(null, newUser);
+					});
+				}
+			});
+		});
+	}));
+
+	// Twitter signup
+	// ===================================================
+
+	passport.use(new TwitterStrategy({
+		// Keys
+		consumerKey: configAuth.twitterAuth.consumerKey,
+		consumerSecret: configAuth.twitterAuth.consumerSecret,
+		callbackURL: configAuth.twitterAuth.callbackURL
+	},
+	function(token, tokenSecret, profile, done) {
+		// Async
+		// FindOne keyrir þegar öll gögn eru komin til baka frá twitter
+		process.nextTick(function() {
+			User.findOne({ 'twitter.id': profile.id }, function(err, user) {
+				// Ef error að tengjast db
+				if (err) {
+					return done(err);
+				}
+
+				// Ef user með id finnst, login
+				if (user) {
+					return done(null, user);
+				} else {
+					// Ef user með id finnst ekki, create
+					var newUser = new User();
+
+					// Info til að vista
+					newUser.twitter.id = profile.id;
+					newUser.twitter.token = token;
+					newUser.twitter.username = profile.username;
+					newUser.twitter.displayName = profile.displayName;
+
+					// Save
+					newUser.save(function(err) {
+						if (err) {
+							throw err;
+						}
+
 						return done(null, newUser);
 					});
 				}

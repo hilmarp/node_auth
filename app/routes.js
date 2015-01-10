@@ -60,6 +60,18 @@ module.exports = function(app, passport) {
 		failureRedirect: '/'
 	}));
 
+	// Twitter
+	// ===================================================
+
+	// Senda yfir á twitter til að authenticate
+	app.get('/auth/twitter', passport.authenticate('twitter'));
+
+	// Twitter sendir notanda til baka hingað með token og profile
+	app.get('/auth/twitter/callback', passport.authenticate('twitter', {
+		successRedirect: '/profile',
+		failureRedirect: '/'
+	}));
+
 	// Logout
 	// ===================================================
 
