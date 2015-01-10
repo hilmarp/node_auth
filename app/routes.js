@@ -72,6 +72,19 @@ module.exports = function(app, passport) {
 		failureRedirect: '/'
 	}));
 
+	// Google
+	// ===================================================
+
+	// Senda user yfir á google til að auðkenna sig
+	// Scope til að fá profile og email
+	app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
+
+	// Google sendir user svo til baka hingað
+	app.get('/auth/google/callback', passport.authenticate('google', {
+		successRedirect: '/profile',
+		failureRedirect: '/'
+	}));
+
 	// Logout
 	// ===================================================
 

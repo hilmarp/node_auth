@@ -2,6 +2,7 @@
 var LocalStrategy = require('passport-local').Strategy;
 var FacebookStrategy = require('passport-facebook').Strategy;
 var TwitterStrategy = require('passport-twitter').Strategy;
+var GoogleStrategy = require('passport-google-oauth').OAuth2Strategy;
 
 // Ná í User model
 var User = require('../app/models/user');
@@ -188,6 +189,50 @@ module.exports = function(passport) {
 					newUser.twitter.displayName = profile.displayName;
 
 					// Save
+					newUser.save(function(err) {
+						if (err) {
+							throw err;
+						}
+
+						return done(null, newUser);
+					});
+				}
+			});
+		});
+	}));
+
+	// Google signup
+	// ===================================================
+
+	passport.use(new GoogleStrategy({
+		// Keys
+		clientID: configAuth.googleAuth.clientID,
+		clientSecret: configAuth.googleAuth.clientSecret,
+		callbackURL: configAuth.googleAuth.callbackURL
+	},
+	function(token, refreshToken, profile, done) {
+		// Async
+		// Þegar gögn eru komin frá Google þá keyrir findOne
+		process.nextTick(function() {
+			User.findOne({ 'google.id': profile.id }, function(err, user) {
+				if (err) {
+					return done(err);
+				}
+
+				if (user) {
+					// Ef user er þegar skráður
+					return done(null, user);
+				} else {
+					// Nýskráning
+					var newUser = new User();
+
+					// Vista gögn
+					newUser.google.id = profile.id;
+					newUser.google.token = token;
+					newUser.google.name = profile.displayName;
+					newUser.google.email = profile.emails[0].value;
+
+					// Vista
 					newUser.save(function(err) {
 						if (err) {
 							throw err;
