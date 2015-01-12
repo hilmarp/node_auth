@@ -117,42 +117,77 @@ module.exports = function(passport) {
 		callbackURL: configAuth.facebookAuth.callbackURL
 	},
 	// Facebook sendir til baka token og profile
-	function(token, refreshToken, profile, done) {
+	function(req, token, refreshToken, profile, done) {
 		// Async
 		process.nextTick(function() {
-			// Finna user í DB útfrá facebook id
-			User.findOne({ 'facebook.id': profile.id }, function(err, user) {
-				// Ef ekki tókst að tengjast db
-				if (err) {
-					return done(err);
-				}
+			// Gá hvort user er skráður inn
+			if (!req.user) {
+				// Finna user í DB útfrá facebook id
+				User.findOne({ 'facebook.id': profile.id }, function(err, user) {
+					// Ef ekki tókst að tengjast db
+					if (err) {
+						return done(err);
+					}
 
-				// Ef user fannst, login
-				if (user) {
-					// Returna user
-					return done(null, user);
-				} else {
-					// Ef user með fb id fannst ekki, búa hann til
-					var newUser = new User();
+					// Ef user fannst, login
+					if (user) {
+						// Ef það er user með id en ekki token þá hefur hann unlinkað sig
+						// Bæta við token og info
+						if (!user.facebook.token) {
+							user.facebook.token = token;
+							user.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
+							user.facebook.email = profile.emails[0].value;
+							user.save(function(err) {
+								if (err) {
+									throw err;
+								}
 
-					// Vista fb info
-					newUser.facebook.id = profile.id;
-					newUser.facebook.token = token;
-					newUser.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
-					// FB getur skilað nokkrum email, tökum fyrsta
-					newUser.facebook.email = profile.emails[0].value;
-
-					// Vista user
-					newUser.save(function(err) {
-						if (err) {
-							throw err;
+								return done(null, user);
+							});
 						}
 
-						// Returna nýja user
-						return done(null, newUser);
-					});
-				}
-			});
+						return done(null, user);
+					} else {
+						// Ef user með fb id fannst ekki, búa hann til
+						var newUser = new User();
+
+						// Vista fb info
+						newUser.facebook.id = profile.id;
+						newUser.facebook.token = token;
+						newUser.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
+						// FB getur skilað nokkrum email, tökum fyrsta
+						newUser.facebook.email = profile.emails[0].value;
+
+						// Vista user
+						newUser.save(function(err) {
+							if (err) {
+								throw err;
+							}
+
+							// Returna nýja user
+							return done(null, newUser);
+						});
+					}
+				});
+			} else {
+				// Notandi er skráður inn
+				// Þarf að linka account
+				var user = req.user;
+
+				user.facebook.id = profile.id;
+				user.facebook.token = token;
+				user.facebook.name = profile.name.givenName + ' ' + profile.name.familyName;
+				user.facebook.email = profile.emails[0].value;
+
+				// Vista
+				user.save(function(err) {
+					if (err) {
+						throw err;
+					}
+
+					return done(null, user);
+				});
+			}
 		});
 	}));
 
